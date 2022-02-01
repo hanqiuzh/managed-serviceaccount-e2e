@@ -8,7 +8,7 @@ WORKDIR $REMOTE_SOURCE_DIR/app
 
 # compile go tests in build image
 RUN GOFLAGS="" go get -u github.com/onsi/ginkgo/v2/ginkgo@v2.1.0
-RUN GOFLAGS="" ginkgo build pkg/tests/placeholder
+RUN GOFLAGS="" ginkgo build pkg/tests/e2e
 
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
@@ -24,9 +24,9 @@ ENV OPTIONS "/resources/options.yaml"
 COPY --from=builder /go/bin/ /usr/local/bin
 
 # install operator binary
-COPY --from=builder $REMOTE_SOURCE_DIR/app/pkg/tests/placeholder/placeholder.test /test/placeholder/placeholder.test
+COPY --from=builder $REMOTE_SOURCE_DIR/app/pkg/tests/e2e/e2e.test /tests/e2e/e2e.test
 
 VOLUME /results
-WORKDIR "/test"
+WORKDIR "/tests"
 
-CMD ["/bin/bash", "-c", "ginkgo placeholder/placeholder.test -- --ginkgo.trace --ginkgo.v --ginkgo.junit-report=/results/result-managed-serviceaccount-placeholder.xml"]
+CMD ["/bin/bash", "-c", "ginkgo e2e/e2e.test -- --ginkgo.trace --ginkgo.v --ginkgo.junit-report=/results/result-managed-serviceaccount-e2e.xml"]

@@ -14,7 +14,7 @@ import (
 	clusterv1 "open-cluster-management.io/api/cluster/v1"
 )
 
-var _ = Describe("base test", Ordered, func() {
+var _ = Describe("e2e", Ordered, func() {
 	var hubClient dynamic.Interface
 	var mcClient dynamic.Interface
 	var managedCluster *clusterv1.ManagedCluster

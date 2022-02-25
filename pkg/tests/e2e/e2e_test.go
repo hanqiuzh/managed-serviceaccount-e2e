@@ -1,6 +1,7 @@
 package base_test
 
 import (
+	"context"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -10,6 +11,8 @@ import (
 	"github.com/stolostron/managed-serviceaccount-e2e/pkg/clients"
 	"github.com/stolostron/managed-serviceaccount-e2e/pkg/utils"
 	"k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	clusterv1 "open-cluster-management.io/api/cluster/v1"
 )
@@ -37,8 +40,26 @@ var _ = Describe("e2e", Ordered, func() {
 		mcClient, err = clients.GetManagedClusterDynamicClient(managedCluster.Name)
 		Expect(err).Should(BeNil())
 	})
+	It("[P1][Sev1][server-foundation] able to enable managed-serviceaccount addon on hub", func() {
+		By("Enabling ManagedServiceAccount feature in MCH/MCE")
+		err := utils.EnableManagedServiceAccountFeature(hubClient)
+		Expect(err).Should(BeNil(), "fail to enable the feature")
 
-	It("[P1][Sev1][server-foundation] able to enable managed-serviceaccount addon", func() {
+		// check if clustermanagementaddon is created
+		By("Waiting ClusterManagementAddon managed-serviceaccount to appear")
+		gvr := schema.GroupVersionResource{
+			Group:    "addon.open-cluster-management.io",
+			Version:  "v1alpha1",
+			Resource: "clustermanagementaddons",
+		}
+		Eventually(func() error {
+			_, err := hubClient.Resource(gvr).Get(context.TODO(), "managed-serviceaccount", v1.GetOptions{})
+			return err
+		}, time.Minute*1, time.Second*10).Should(BeNil())
+
+	})
+
+	It("[P1][Sev1][server-foundation] able to install managed-serviceaccount addon on managed clusters", func() {
 		// check if managed-serviceaccount addon is already enabled
 		managedServiceAccountAddon, err := utils.GetManagedServiceAccountAddon(hubClient, managedCluster)
 		// skip this test if already enabled
